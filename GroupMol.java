@@ -15,7 +15,11 @@ class GroupMol {
 	double ly;
 	double lz;
 	static double blength = 1.5;
-	
+	//symmetry defines how to find coord of all molecules in a unit cell, from a give ref molecule
+	//the coord of ith mol is given by (x*fxi + dxi, y*fyi + dyi, z*fzi + dzi)
+	//sym1[i][d] = fdi, sym2[i][d] = ddi
+	static double[][] symmetry1 = {{1,1,1},{-1,1,1},{1,-1,1},{1,1,-1}};
+	static double[][] symmetry2 = {{0,0,0},{0.5,-0.5,0},{0,1.5,-0.5},{0.5,0,0.5}};
 	public GroupMol(String coordinname, double llx, double lly, double llz) {
 		String line = "";
 		nmol = 0;
@@ -132,167 +136,44 @@ class GroupMol {
 		FileWriter fw1=new FileWriter(name_qm);
 		FileWriter fw2=new FileWriter(name_c);
 		
-		for(int t = 0; t < qmlist.size(); t ++) if(qmlist.get(t).length!=4) System.out.println("QMLIST SIZE WRONG!!!!!!!!");
+		//for(int t = 0; t < qmlist.size(); t ++) if(qmlist.get(t).length!=4) System.out.println("QMLIST SIZE WRONG!!!!!!!!");
 		
 		String line;
 		Molecule m = mollist.get(0);
 		
-	/*	for(int i =0; i < m.atomlist.size(); i++) {
-			line = String.format("%s   %f  %f  %f %n", m.atomlist.get(i).type, m.atomlist.get(i).x, m.atomlist.get(i).y, m.atomlist.get(i).z);
-			fw.write(line);
-		}
-		for(int i =0; i < m.atomlist.size(); i++) {
-			line = String.format("%s   %f  %f  %f %n", m.atomlist.get(i).type, lx/2. - m.atomlist.get(i).x, -ly/2. + m.atomlist.get(i).y, m.atomlist.get(i).z);
-			fw.write(line);
-		}
-		for(int i =0; i < m.atomlist.size(); i++) {
-			line = String.format("%s   %f  %f  %f %n", m.atomlist.get(i).type, m.atomlist.get(i).x, 3.*ly/2. - m.atomlist.get(i).y, m.atomlist.get(i).z - lz/2.);
-			fw.write(line);
-		}
-		for(int i =0; i < m.atomlist.size(); i++) {
-			line = String.format("%s   %f  %f  %f %n", m.atomlist.get(i).type, lx/2. + m.atomlist.get(i).x, m.atomlist.get(i).y , lz/2. - m.atomlist.get(i).z);
-			fw.write(line);
-		} */
-		
-		int qi = -1;
-		
 		for(int k = xmin; k <= xmax ; k ++) {
 			for(int n = ymin; n <= ymax ; n ++) {
 				for(int l = zmin; l <= zmax ; l ++) {
-					boolean isqm = false;
-					//decide whether a molecule is qm part.
-					for(int idq = 0; idq < qmlist.size(); idq ++) {
-						if(k==qmlist.get(idq)[0] && n==qmlist.get(idq)[1] && l==qmlist.get(idq)[2]) {
-							isqm = true;
-							qi = qmlist.get(idq)[3];
-							//System.out.println("Q id: " + qi);
-							break;
-						}
-					}
-					
-					if(!isqm) {
-						for(int i =0; i < m.atomlist.size(); i++) {
-							line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x +
-							 lx*k, m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-							fw2.write(line);
-						}
-						for(int i =0; i < m.atomlist.size(); i++) {
-							line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. - m.atomlist.get(i).x+ lx*k,
-							 -ly/2. + m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-							fw2.write(line);
-						}
-						for(int i =0; i < m.atomlist.size(); i++) {
-							line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x+ lx*k, 
-							3*ly/2. - m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z - lz/2.+lz*l, m.atomlist.get(i).charge);
-							fw2.write(line);
-						}
-						for(int i =0; i < m.atomlist.size(); i++) {
-							line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. + m.atomlist.get(i).x+ lx*k,
-							 m.atomlist.get(i).y+ly*n, lz/2. - m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-							fw2.write(line);
-						} 
-					}
-					
-					else {
-					//System.out.println("M id: " + k + ", " + n + ", " + l + ", " + qi);
-						switch(qi) {
-							case 0: 						
-								for(int i =0; i < m.atomlist.size(); i++) {
-						  		line = String.format("%s  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x +
-								 lx*k, m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l);
-								fw1.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. - m.atomlist.get(i).x+ lx*k,
-								 -ly/2. + m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x+ lx*k, 
-								3*ly/2. - m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z - lz/2.+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. + m.atomlist.get(i).x+ lx*k,
-								 m.atomlist.get(i).y+ly*n, lz/2. - m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								break; 
-							case 1:
-								for(int i =0; i < m.atomlist.size(); i++) {
-						  		line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x +
-								 lx*k, m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. - m.atomlist.get(i).x+ lx*k,
-								 -ly/2. + m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l);
-								fw1.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x+ lx*k, 
-								3*ly/2. - m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z - lz/2.+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. + m.atomlist.get(i).x+ lx*k,
-								 m.atomlist.get(i).y+ly*n, lz/2. - m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								} 
+					for(int mid = 0; mid < 4; mid ++) {
+						boolean isqm = false;
+						//decide whether a molecule is qm part.
+						for(int idq = 0; idq < qmlist.size(); idq ++) {
+							if(k==qmlist.get(idq)[0] && n==qmlist.get(idq)[1] && l==qmlist.get(idq)[2] && mid==qmlist.get(idq)[3]) {
+								isqm = true;
+								System.out.println("Q id: " + k + ", " + n + ", " + l + ", " + mid);
 								break;
-							case 2:
-								for(int i =0; i < m.atomlist.size(); i++) {
-						  		line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x +
-								 lx*k, m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. - m.atomlist.get(i).x+ lx*k,
-								 -ly/2. + m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x+ lx*k, 
-								3*ly/2. - m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z - lz/2.+lz*l);
-								fw1.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. + m.atomlist.get(i).x+ lx*k,
-								 m.atomlist.get(i).y+ly*n, lz/2. - m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								} 
-								break;
-							case 3:
-								for(int i =0; i < m.atomlist.size(); i++) {
-						  		line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x +
-								 lx*k, m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. - m.atomlist.get(i).x+ lx*k,
-								 -ly/2. + m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, m.atomlist.get(i).x+ lx*k, 
-								3*ly/2. - m.atomlist.get(i).y+ly*n, m.atomlist.get(i).z - lz/2.+lz*l, m.atomlist.get(i).charge);
-								fw2.write(line);
-								}
-								for(int i =0; i < m.atomlist.size(); i++) {
-								line = String.format("%s  %f  %f  %f  %n", m.atomlist.get(i).type, lx/2. + m.atomlist.get(i).x+ lx*k,
-								 m.atomlist.get(i).y+ly*n, lz/2. - m.atomlist.get(i).z+lz*l);
-								fw1.write(line);
-								} 
-								break;
-								
-							default:
-								System.out.println("qm id wrong!!!!!");								
+							}
 						}
 					
-					}
-				}
-			}
-		}
+						if(!isqm) {
+							for(int i =0; i < m.atomlist.size(); i++) {
+								line = String.format("%s  %f  %f  %f  %f  %n", m.atomlist.get(i).type, (symmetry1[mid][0]*m.atomlist.get(i).x+symmetry2[mid][0]*lx+lx*k), 
+								 (symmetry1[mid][1]*m.atomlist.get(i).y+symmetry2[mid][1]*ly+ly*n), (symmetry1[mid][2]*m.atomlist.get(i).z+symmetry2[mid][2]*lz+lz*l), m.atomlist.get(i).charge);
+								fw2.write(line);
+							}
+						}
+					
+						else {
+							for(int i =0; i < m.atomlist.size(); i++) {
+								line = String.format("%s  %f  %f  %f  %n", m.atomlist.get(i).type, (symmetry1[mid][0]*m.atomlist.get(i).x+symmetry2[mid][0]*lx+lx*k), 
+								 (symmetry1[mid][1]*m.atomlist.get(i).y+symmetry2[mid][1]*ly+ly*n), (symmetry1[mid][2]*m.atomlist.get(i).z+symmetry2[mid][2]*lz+lz*l));
+								fw1.write(line);
+							}
+						}
+					} //end mid
+				}  //end l
+			} //end n
+		}// end k
 
 		fw1.close();
 		fw2.close();
@@ -305,8 +186,10 @@ class GroupMol {
 		naph.mollist.get(0).unwrap();
 		//naph.mollist.get(0).print_info();
 		int[] qm1 = {0,0,0,1};
+		int[] qm2 = {0,0,0,0};
 		List<int[]> qmlist = new ArrayList<int[]>();
 		qmlist.add(qm1);
-		naph.print_cfile("qm_coord.xyz", "charge_coord.xyz", qmlist, -2, 2, -2, 2, -2, 2);
+		qmlist.add(qm2);
+		naph.print_cfile("qm_coord.xyz", "charge_coord.xyz", qmlist, -1, 1, -1, 1, -1, 1);
 	}
 }
