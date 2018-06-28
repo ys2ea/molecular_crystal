@@ -1,4 +1,5 @@
 import java.util.*;
+import java.io.*;
 import static java.lang.Math.*;
 
 class Molecule {
@@ -23,12 +24,15 @@ class Molecule {
 	
 	public void print_info() {
 		System.out.printf("# of Atom: %d  list: ", atomlist.size());
-		for(int i =0; i < atomlist.size(); i++)
-			System.out.printf(" %s", atomlist.get(i).type);
+		double totalx = 0., totaly = 0., totalz = 0.; 
+		for(int i =0; i < atomlist.size(); i++) {
+			System.out.printf("(%s,%d,%d)", atomlist.get(i).type, atomlist.get(i).idx, atomlist.get(i).nb.size());
+			totalx += atomlist.get(i).x; totaly += atomlist.get(i).y; totalz += atomlist.get(i).z;
+		}
 		System.out.printf("\n");
 		double x1=0., y1=0., z1=0., x2=0., y2=0., z2=0.;
 		boolean first = false;
-
+		System.out.println("total coord: " + totalx/lx/atomlist.size() + ", " + totaly/ly/atomlist.size() + ", " + totalz/lz/atomlist.size());
 		for(int i =0; i < atomlist.size(); i++) {
 		
 			if(atomlist.get(i).type.charAt(0) == 'O') 
@@ -116,5 +120,54 @@ class Molecule {
 			}
 		}
 			
+	}
+	
+	public void print_to_file(String name) throws IOException {
+		FileWriter fw=new FileWriter(name);
+		String line;
+		for(int i =0; i < atomlist.size(); i++) {
+			line = String.format("%s   %f  %f  %f  %f %n", atomlist.get(i).type, atomlist.get(i).x, atomlist.get(i).y, atomlist.get(i).z, atomlist.get(i).charge);
+			fw.write(line);
+		}
+		fw.close();
+	}
+	
+	public void reset_tag() {
+		for(Atom a : atomlist) a.tag = false;
+	}
+	
+	//unwrap a molecule from PBC	
+	public void unwrap() {
+		if(lx<bl*3. || ly<bl*3. || lz<bl*3.) { System.out.println("System too small to unwrap!!"); System.exit(1); }
+		
+		reset_tag();
+		List<Atom> stack = new ArrayList<Atom>();
+		double dx, dy, dz;
+		
+		stack.add(atomlist.get(0));
+		atomlist.get(0).tag = true;
+		while(stack.size()!=0 && stack.size() < 100) {
+			int last = stack.size() - 1;
+
+			boolean rm = true;
+			for(Atom b : stack.get(last).nb) {
+				if(!b.tag) {
+					stack.add(b); 
+					b.tag = true;
+					rm = false;
+					dx = stack.get(last).x - b.x;
+					dy = stack.get(last).y - b.y;
+					dz = stack.get(last).z - b.z;
+				
+					if(dx > lx-bl) b.x += lx;
+					else if(dx < bl-lx) b.x -= lx;
+					if(dy > ly-bl) b.y += ly;
+					else if(dy < bl-ly) b.y -= ly;
+					if(dz > lz-bl) b.z += lz;
+					else if(dz < bl-lz) b.z -= lz;
+				}
+			}
+			if(rm) stack.remove(last);
+		}
 	}
 }
